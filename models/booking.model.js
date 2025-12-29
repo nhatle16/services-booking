@@ -62,4 +62,20 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+bookingSchema.pre("validate", function (next) {
+  // Validate required fields for flight booking
+  if (this.bookingType === "flight" && !this.flightScheduleId) {
+    return next(new Error("Flight booking requires flightScheduleId"));
+  }
+
+  // Validate required fields for hotel booking
+  if (this.bookingType === "hotel") {
+    if (!this.roomTypeId || !this.checkInDate || !this.checkOutDate) {
+      return next(new Error("Hotel booking requires roomTypeId, checkInDate, and checkOutDate"));
+    }
+  }
+
+  next();
+})
+
 module.exports = mongoose.model("Booking", bookingSchema);
