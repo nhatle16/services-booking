@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 const flightScheduleSchema = new mongoose.Schema(
   {
     flightId: {
@@ -53,3 +52,5 @@ const flightScheduleSchema = new mongoose.Schema(
 
   { timestamps: true }
 );
+
+module.exports = mongoose.model("FlightSchedule", flightScheduleSchema);
