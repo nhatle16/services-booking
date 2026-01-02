@@ -21,6 +21,12 @@ const bookingSchema = new mongoose.Schema(
       default: null
     },
 
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hotel",
+      default: null
+    },
+
     roomTypeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "RoomType",
@@ -72,6 +78,10 @@ bookingSchema.pre("validate", function (next) {
   if (this.bookingType === "hotel") {
     if (!this.roomTypeId || !this.checkInDate || !this.checkOutDate) {
       return next(new Error("Hotel booking requires roomTypeId, checkInDate, and checkOutDate"));
+    }
+
+    if (this.checkOutDate <= this.checkInDate) {
+      return next(new Error("checkOutDate must come after checkInDate."));
     }
   }
 
