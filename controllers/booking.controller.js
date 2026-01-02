@@ -1,7 +1,7 @@
 const Booking = require('../models/booking.model');
-const Hotel = require('../models/hotel.model');
 const RoomType = require('../models/roomType.model');
 const RoomAvailability = require('../models/roomAvailability.model');
+const FlightSchedule = require('../models/flightSchedule.model');
 
 const bookHotel = async (req, res) => {
   try {
@@ -74,16 +74,91 @@ const bookHotel = async (req, res) => {
 
 const bookFlight = async (req, res) => {
   try {
+    const userId = req.user._id;
+    const { flightScheduleId, bookingQuantity } = req.body;
+
+    if (!flightScheduleId || !bookingQuantity) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // Get flight schedule
+    const flightSchedule = await FlightSchedule.findById(flightScheduleId);
     
-  } catch (error) {
-    
+    if (!flightSchedule) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
+
+    // Check available seats
+    if (flightSchedule.availableSeats < bookingQuantity) {
+      return res.status(409).json({ message: "Not enough seats available."});
+    }
+
+    flightSchedule.availableSeats -= bookingQuantity;
+    await flightSchedule.save();    // update the flight availability
+
+    // Calculate total booking price
+    const totalPrice = flightSchedule.basePrice * bookingQuantity;
+
+    const booking = await Booking.create({
+      userId,
+      bookingType: "flight",
+      flightScheduleId,
+      bookingQuantity,
+      totalPrice,
+      currency: "CAD"
+    });
+
+    res.status(201).json(booking);
+   } catch (error) {
+    res.status(500).json({ message: "Server error." });
   }
 }
 
 const cancelBooking = async (req, res) => {
   try {
-    
+    const bookingId = req.params.id;
+    const booking = await Booking.findById(bookingId);
+
+    // Booking and booking status validation
+    if (!booking || !booking.status !== "confirmed") {
+      return res.status(400).json({ message: "Cannot cancel invalid booking." });
+    }
+
+    // CANCEL HOTEL BOOKING
+    if (booking.bookingType === "hotel") {
+      const roomAvailability = await RoomAvailability.find({
+        roomTypeId: booking.roomTypeId,
+        date: { $gte: booking.checkInDate, $lt: booking.checkOutDate }
+      });
+
+      // Restore the number of booked rooms
+      for (const day in roomAvailability) {
+        day.availableRooms += bookingQuantity;  
+        await day.save();
+      }
+    }
+
+    // CANCEL FLIGHT BOOKING
+    if (booking.bookingType === "flight") {
+      const flightSchedule = await FlightSchedule.findById(booking.flightScheduleId);
+      
+      // Restore the number of occupied seats
+      flightSchedule.availableRooms += bookingQuantity;
+      await flightSchedule.save();
+    }
+
+    // Update booking status
+    booking.status = "cancelled";
+    await booking.save();
+
+    res.status(204).json({ message: "Booking cancelled." });
   } catch (error) {
-    
+    res.status(500).json({ message: "Server error." });
   }
+}
+
+module.exports = {
+  bookHotel,
+  bookFlight,
+  cancelBooking
 }
