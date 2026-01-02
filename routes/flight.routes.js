@@ -11,13 +11,13 @@ const {
 const router = express('router');
 
 // Public
-router.route('/').get(getAllFlights);
-router.route('/:id').get(getFlightById);
+router.route('/flights').get(getAllFlights);
+router.route('/flights/:flightId').get(getFlightById);
 
 // Admin
-router.route('/').post(createFlight);
-router.route('/schedule').post(createFlightSchedule);
-router.route('/schedule/:id')
+router.route('/flights').post(createFlight);
+router.route('/flights/:flightId/schedules').post(createFlightSchedule);
+router.route('/schedules/:flightScheduleId')
   .put(updateFlightSchedule)
   .delete(deleteFlightSchedule);
 
