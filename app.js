@@ -2,9 +2,10 @@
 const express = require('express');
 const app = express();
 
-const hotelRouter = require('./controllers/hotel.controller');
-const flightRouter = require('./controllers/flight.controller');
-const bookingRouter = require('./controllers/booking.controller');
+const hotelRouter = require('./routes/hotel.routes');
+const flightRouter = require('./routes/flight.routes');
+const bookingRouter = require('./routes/booking.routes');
+const authRouter = require('./routes/auth.routes');
 
 app.use(express.json());
 
