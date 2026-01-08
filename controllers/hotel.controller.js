@@ -22,7 +22,7 @@ const getHotels = async (req, res) => {
 const getHotelById = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const hotel = Hotel.findById(hotelId)
+    const hotel = await Hotel.findById(hotelId);
     
     // Validate a hotel's existence
     if (!hotel) {
